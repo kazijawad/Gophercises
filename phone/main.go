@@ -43,8 +43,56 @@ func main() {
 	must(err)
 	_, err = insertPhone(db, "1234567892")
 	must(err)
-	_, err = insertPhone(db, "(123)456-7892")
+	id, err := insertPhone(db, "(123)456-7892")
 	must(err)
+
+	number, err := getPhone(db, id)
+	must(err)
+	fmt.Println("Number is...", number)
+
+	phones, err := getAllPhones(db)
+	must(err)
+	for _, p := range phones {
+		fmt.Printf("%+v\n", p)
+	}
+}
+
+func getPhone(db *sql.DB, id int) (string, error) {
+	var number string
+	row := db.QueryRow("SELECT * FROM phone_numbers WHERE id=$1", id)
+	err := row.Scan(&id, &number)
+	if err != nil {
+		return "", err
+	}
+	return number, nil
+}
+
+type phone struct {
+	id     int
+	number string
+}
+
+func getAllPhones(db *sql.DB) ([]phone, error) {
+	rows, err := db.Query("SELECT * FROM phone_numbers")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var ret []phone
+	for rows.Next() {
+		var p phone
+		err := rows.Scan(&p.id, &p.number)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, p)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
 }
 
 func insertPhone(db *sql.DB, phone string) (int, error) {

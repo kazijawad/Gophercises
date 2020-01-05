@@ -2,6 +2,7 @@ package deck
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 )
 
@@ -31,7 +32,7 @@ func TestDefaultSort(t *testing.T) {
 	cards := New(DefaultSort)
 	exp := Card{Rank: Ace, Suit: Spade}
 	if cards[0] != exp {
-		t.Error("Expected Ace of Spades as first card. Received:", cards[0])
+		t.Errorf("Expected Ace of Spades as first card. Received: %s.", cards[0])
 	}
 }
 
@@ -39,7 +40,21 @@ func TestSort(t *testing.T) {
 	cards := New(Sort(Less))
 	exp := Card{Rank: Ace, Suit: Spade}
 	if cards[0] != exp {
-		t.Error("Expected Ace of Spades as first card. Received:", cards[0])
+		t.Errorf("Expected Ace of Spades as first card. Received: %s.", cards[0])
+	}
+}
+
+func TestShuffle(t *testing.T) {
+	shuffleRand = rand.New(rand.NewSource(0))
+	orig := New()
+	first := orig[40]
+	second := orig[35]
+	cards := New(Shuffle)
+	if cards[0] != first {
+		t.Errorf("Expected the first card to be %s. Received: %s.", first, cards[0])
+	}
+	if cards[1] != second {
+		t.Errorf("Expected the second card to be %s. Received: %s.", second, cards[1])
 	}
 }
 
@@ -52,7 +67,7 @@ func TestJokers(t *testing.T) {
 		}
 	}
 	if count != 3 {
-		t.Error("Expected 3 Jokers. Received:", count)
+		t.Errorf("Expected 3 Jokers. Received: %d.", count)
 	}
 }
 

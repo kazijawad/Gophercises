@@ -52,7 +52,7 @@ func TestJokers(t *testing.T) {
 		}
 	}
 	if count != 3 {
-		t.Error("Expected 3 Jokers, received:", count)
+		t.Error("Expected 3 Jokers. Received:", count)
 	}
 }
 
@@ -65,5 +65,12 @@ func TestFilter(t *testing.T) {
 		if c.Rank == Two || c.Rank == Three {
 			t.Error("Expected all twos and threes to be filtered out.")
 		}
+	}
+}
+
+func TestDeck(t *testing.T) {
+	cards := New(Deck(3))
+	if len(cards) != 52*3 {
+		t.Errorf("Expected %d cards. Received: %d cards.", 52*3, len(cards))
 	}
 }

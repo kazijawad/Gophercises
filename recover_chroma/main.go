@@ -56,7 +56,7 @@ func sourceCodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	formatter := html.New(html.TabWidth(2), html.WithLineNumbers(true), html.HighlightLines(lines))
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, "<style>pre { font-size: 1.5em; }</style>")
+	fmt.Fprintf(w, "<style>pre { font-size: 1.2em; }</style>")
 	formatter.Format(w, style, iterator)
 	// _ = quick.Highlight(w, b.String(), "go", "html", "github")
 }

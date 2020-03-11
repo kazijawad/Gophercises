@@ -1,26 +1,56 @@
 package main
 
 import (
+	"fmt"
 	"io"
-	"os"
+	"log"
+	"net/http"
+	"path/filepath"
 
 	"github.com/kazijawad/Gophercises/transform/primitive"
 )
 
 func main() {
-	inFile, err := os.Open("tmp/icon.png")
-	if err != nil {
-		panic(err)
-	}
-	defer inFile.Close()
-	out, err := primitive.Transform(inFile, 50)
-	if err != nil {
-		panic(err)
-	}
-	os.Remove("out.png")
-	outFile, err := os.Create("out.png")
-	if err != nil {
-		panic(err)
-	}
-	io.Copy(outFile, out)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		html := `
+			<html>
+			<body>
+				<form action="/upload" method="post" enctype="multipart/form-data">
+					<input type="file" name="image">
+					<button type="submit">Upload Image</button>
+				</form>
+			</body>
+			</html>
+		`
+		fmt.Fprint(w, html)
+	})
+	mux.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+		file, header, err := r.FormFile("image")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+		ext := filepath.Ext(header.Filename)[1:]
+		out, err := primitive.Transform(file, ext, 50)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		switch ext {
+		case "jpg":
+			fallthrough
+		case "jpeg":
+			w.Header().Set("Content-Type", "image/jpeg")
+		case "png":
+			w.Header().Set("Content-Type", "image/png")
+		default:
+			http.Error(w, fmt.Sprintf("Invalid Image Type: %s", ext), http.StatusBadRequest)
+			return
+		}
+
+		io.Copy(w, out)
+	})
+	log.Fatal(http.ListenAndServe(":3000", mux))
 }

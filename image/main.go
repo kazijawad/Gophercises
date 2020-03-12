@@ -1,54 +1,47 @@
 package main
 
 import (
-	"image"
-	"image/color"
-	"image/draw"
-	"image/png"
+	"math/rand"
 	"os"
+
+	svg "github.com/ajstarks/svgo"
 )
 
+func rn(n int) int { return rand.Intn(n) }
+
 func main() {
-	data := []int{10, 33, 73, 64}
-	w, h := len(data)*60+10, 100
-	r := image.Rect(0, 0, w, h)
-	img := image.NewRGBA(r)
-	bg := image.NewUniform(color.RGBA{240, 240, 240, 255})
-	draw.Draw(img, r, bg, image.Point{0, 0}, draw.Src)
-	mask := image.NewRGBA(image.Rect(0, 0, w, h))
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
-			alpha := uint8(0)
-			switch {
-			case y < 30:
-				alpha = 255
-			case y < 50:
-				alpha = 100
-			}
-			mask.Set(x, y, color.RGBA{
-				R: uint8((x + y) & 255),
-				G: uint8((x + y) << 1 & 255),
-				B: uint8((x + y) << 2 & 255),
-				A: alpha,
-			})
+	canvas := svg.New(os.Stdout)
+	data := []struct {
+		Month string
+		Usage int
+	}{
+		{"Jan", 171},
+		{"Feb", 180},
+		{"Mar", 100},
+		{"Apr", 87},
+		{"May", 66},
+		{"Jun", 40},
+		{"Jul", 32},
+		{"Aug", 55},
+	}
+	w := len(data)*60 + 10
+	h := 300
+	threshold := 120
+	max := 0
+	for _, item := range data {
+		if item.Usage > max {
+			max = item.Usage
 		}
 	}
-	for i, dp := range data {
-		x0, y0 := (i*60 + 10), 100-dp
-		x1, y1 := (i+1)*60-1, 100
-		bar := image.Rect(x0, y0, x1, y1)
-		grey := image.NewUniform(color.RGBA{180, 180, 180, 255})
-		draw.Draw(img, bar, grey, image.Point{0, 0}, draw.Src)
-		red := image.NewUniform(color.RGBA{250, 180, 180, 255})
-		draw.DrawMask(img, bar, red, image.Point{0, 0}, mask, image.Point{x0, y0}, draw.Over)
+	canvas.Start(w, h)
+	for i, val := range data {
+		p := val.Usage * (h - 50) / max
+		canvas.Rect(i*60+10, (h-50)-p, 50, p, "fill:rgb(77,117,232)")
+		canvas.Text(i*60+35, h-25, val.Month, "font-size:14pt;fill:rgb(150,150,150);text-anchor:middle")
 	}
-	f, err := os.Create("image.png")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	err = png.Encode(f, img)
-	if err != nil {
-		panic(err)
-	}
+	threshP := threshold * (h - 50) / max
+	canvas.Line(0, h-threshP, w, h-threshP, "stroke:rgb(255,100,100);opacity:0.8;stroke-width:2")
+	canvas.Rect(0, 0, w, h-threshP, "fill:rgb(255,100,100);opacity:0.2")
+	canvas.Line(0, h-50, w, h-50, "stroke:rgb(150,150,150);stroke-width:2")
+	canvas.End()
 }

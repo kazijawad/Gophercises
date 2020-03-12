@@ -47,7 +47,7 @@ func Transform(image io.Reader, ext string, numShapes int, opts ...func() []stri
 		return nil, errors.New("primitive: failed to create temporary input file")
 	}
 	defer os.Remove(in.Name())
-	out, err := tempFile("out_", ext)
+	out, err := tempFile("in_", ext)
 	if err != nil {
 		return nil, errors.New("primitive: failed to create temporary output file")
 	}
@@ -60,7 +60,6 @@ func Transform(image io.Reader, ext string, numShapes int, opts ...func() []stri
 	if err != nil {
 		return nil, fmt.Errorf("primitive: failed to run the primitive command. stdCombo=%s", stdCombo)
 	}
-	fmt.Println(stdCombo)
 	b := bytes.NewBuffer(nil)
 	_, err = io.Copy(b, out)
 	if err != nil {
